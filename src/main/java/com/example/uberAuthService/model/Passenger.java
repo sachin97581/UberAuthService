@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import lombok.*;
 
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +31,14 @@ public class Passenger extends BaseModel{
     @Column(nullable = false)
     private String password;
 
-
     @OneToMany(mappedBy = "passenger")
     private List<Booking> bookings = new ArrayList<>();
 
+    public Long getId() {
+        return id;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
 }

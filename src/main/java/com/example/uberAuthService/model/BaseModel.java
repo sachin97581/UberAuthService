@@ -27,4 +27,5 @@ public abstract class BaseModel { // we create basemodel class asbstrect because
     @Temporal(TemporalType.TIMESTAMP )
     @LastModifiedDate // this annotation tells spring that only handle it for object updation
     protected Date updatedAt;
+
 }
