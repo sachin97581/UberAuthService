@@ -6,6 +6,8 @@ import com.example.uberAuthService.dto.PassengerDto;
 import com.example.uberAuthService.dto.PassengerSignupRequestDto;
 import com.example.uberAuthService.service.AuthService;
 import com.example.uberAuthService.service.JwtService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,10 +56,10 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequestDto.getEmail() , authRequestDto.getPassword()));
         String jwtToken = jwtService.createToken(authRequestDto.getEmail());
         ResponseCookie responseCookie = ResponseCookie.from("jwtToken" , jwtToken)
-                        .httpOnly(true)
+                        .httpOnly(false)
                         .path("/")
                         .secure(false)
-                        .maxAge(cookieExpiry)
+                        .maxAge(7*24*3600)  // 24*7*3600 i can add also
                         .build();
         response.setHeader(HttpHeaders.SET_COOKIE, responseCookie.toString());
         if (authentication.isAuthenticated()){
@@ -65,4 +67,16 @@ public class AuthController {
         }
         return new ResponseEntity<>("Not Success full sign-in", HttpStatus.OK);
     }
+
+    // write a new /valid fetch api which fetch the jwt token
+
+    @CrossOrigin(origins = "*")
+    @GetMapping("/validate")
+    public ResponseEntity<?> validate(HttpServletRequest request){
+        for (Cookie cookie : request.getCookies()){
+            System.out.println(cookie.getName()+" " + cookie.getValue());
+        }
+       return new ResponseEntity<>("Success" , HttpStatus.OK);
+    }
+
 }

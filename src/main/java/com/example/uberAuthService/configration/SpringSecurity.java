@@ -1,7 +1,9 @@
 package com.example.uberAuthService.configration;
 
 
+import com.example.uberAuthService.filters.JwtAuthFilter;
 import com.example.uberAuthService.service.UserDetailServiceImp;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,10 +17,16 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
-public class SpringSecurity {
+public class SpringSecurity implements WebMvcConfigurer {
+
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
 
     @Bean
     public UserDetailsService userDetailsService(){
@@ -31,10 +39,17 @@ public class SpringSecurity {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-//                .cors(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/signup/*").permitAll()
-                .requestMatchers("/api/v1/auth/signin/*").permitAll())
+                .requestMatchers("/api/v1/auth/signin/*").permitAll()
+//                .requestMatchers("/api/v1/auth/validate").permitAll()
+                 .requestMatchers("/api/v1/auth/validate").permitAll() // Allow validate endpoint
+                 .anyRequest().authenticated() // Everything else requires authentication
+
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter , UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -63,5 +78,13 @@ public class SpringSecurity {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder(){
         return new BCryptPasswordEncoder();
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry){
+        registry.addMapping("/**")
+//                .allowCredentials(true)  // if i uncomment it then i will get error because may be the is HttpOnly(false)
+                .allowedOriginPatterns("*")
+                .allowedMethods("GET" , "POST" , "PUT" , "DELETE");
     }
 }
